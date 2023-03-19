@@ -7,6 +7,8 @@ import {
   Show,
   Signal,
   onCleanup,
+  children,
+  JSXElement,
 } from "solid-js";
 
 import logo from "./logo.svg";
@@ -19,6 +21,9 @@ import { Rerun } from "@solid-primitives/keyed";
 import { Dynamic } from "solid-js/web";
 import { Dumbell, Sprint } from "./icons";
 import { LogData, tools, WorkoutData, workoutStore } from "./workoutstore";
+import { clickOutsideDirective } from "./directives";
+
+const clickOutside = clickOutsideDirective;
 
 const Log = (props: { log: LogData; i: Accessor<number> }) => {
   const format = (num: number) => {
@@ -92,85 +97,39 @@ const Workout = (props: { workout: WorkoutData; isActive: boolean }) => {
   );
 };
 
-const BottomSheet: Component<{ classes: string }> = ({ children, classes }) => (
-  <Motion.div
-    class={
-      "h-screen w-screen fixed  top-0 left-0  backdrop-blur bg-black/10 z-20"
-    }
-    animate={{}}
-  >
+const BottomSheet: Component<{ children?: JSXElement; classes: string }> = (
+  props
+) => {
+  const c = children(() => props.children);
+  return (
     <Motion.div
       class={
-        "z-50 text-black p-2 bg-gray-200 shadow-sm  rounded-t-md fixed h-[45vh]  bottom-0  left-10 right-10 " +
-        classes
+        "h-screen w-screen fixed  top-0 left-0  backdrop-blur bg-black/10 z-20"
       }
-      initial={{ y: 2500 }}
-      onViewEnter={() => {
-        console.log("wuhu");
-      }}
-      animate={{ y: 0 }}
-      exit={{ y: [4500] }}
+      animate={{}}
     >
-      {children}
+      <Motion.div
+        class={
+          "z-50 text-black p-2 bg-gray-200 shadow-sm  rounded-t-md fixed h-[45vh]  bottom-0  left-10 right-10 " +
+          props.classes
+        }
+        initial={{ y: 2500 }}
+        onViewEnter={() => {
+          console.log("wuhu");
+        }}
+        animate={{ y: 0 }}
+        exit={{ y: [4500] }}
+      >
+        {c()}
+      </Motion.div>
     </Motion.div>
-  </Motion.div>
-);
+  );
+};
 
 const ControlBar = () => {
-  const [showNewMove, setShowNewMove] = createSignal(false);
-  let ref;
-  let modal: ModalInterface;
-
-  const modalOptions: ModalOptions = {
-    placement: "center",
-    backdrop: "dynamic",
-    backdropClasses:
-      "bg-gray-900 bg-opacity-50 dark:bg-opacity-80 fixed inset-0 z-40",
-    closable: true,
-    onHide: () => {
-      console.log("modal is hidden");
-    },
-    onShow: () => {
-      console.log("modal is shown");
-    },
-    onToggle: () => {
-      console.log("modal has been toggled");
-    },
-  };
-
-  const [ready, setReady] = createSignal(false);
-
-  const showModal = () => {
-    console.log("called");
-    setShowNewMove((x) => !x);
-    // modal._targetEl = ref
-    // modal.show()
-  };
-
-  onMount(() => {
-    modal = new Modal(ref, modalOptions);
-  });
-
-  const viewLeft = () => {
-    console.log("Ready", ready());
-    setReady(true);
-    console.log("Ready>", ready());
-  };
-  const viewEnter = () => {
-    console.log("view entered");
-    setReady(false);
-  };
-
   type w = "Controls" | "NewSet" | "NewExercise" | "NewWorkout";
 
   const [what, setWhat] = createSignal<w>("Controls");
-
-  function clickOutside(el, accessor) {
-    const onClick = (e) => !el.contains(e.target) && accessor()?.();
-    document.body.addEventListener("click", onClick);
-
-    onCleanup(() => document.body.removeEventListener("click", onClick));
-  }
 
   const NewWorkout = () => (
     <BottomSheet classes="h-fit">
@@ -270,15 +229,12 @@ const ControlBar = () => {
                         setNewExerciseIsLift((x) => !x);
                       }}
                     >
-                      <Dynamic
-                        component={
-                          newExerciseIsLift() ? (
-                            <Dumbell classes="w-6 h-6" />
-                          ) : (
-                            <Sprint classes="w-6 h-6" />
-                          )
-                        }
-                      />
+                      <Show
+                        when={newExerciseIsLift}
+                        fallback={<Sprint classes="w-6 h-6" />}
+                      >
+                        <Dumbell classes="w-6 h-6" />
+                      </Show>
                     </Motion.button>
                   </Rerun>
                 </Presence>
@@ -355,8 +311,6 @@ const ControlBar = () => {
       exit={{ scale: [1, 0] }}
       class="flex bg-white text-black h-full shadow-sm  rounded-t-md"
       role="group"
-      onViewEnter={viewEnter}
-      onViewLeave={viewLeft}
     >
       <button
         type="button"
