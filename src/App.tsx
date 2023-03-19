@@ -321,6 +321,27 @@ const ControlBar = () => {
               <li class="block px-1 bg-black rounded-sm font-semibold text-sm text-white">
                 wowo ow owo wo a
               </li>
+              <Presence>
+                <Rerun on={newExerciseIsLift}>
+                  <Motion.button
+                    class=""
+                    animate={{ rotateY: [90, 0] }}
+                    onClick={() => {
+                      setNewExerciseIsLift((x) => !x);
+                    }}
+                  >
+                    <Dynamic
+                      component={
+                        newExerciseIsLift() ? (
+                          <Dumbell classes="w-6 h-6" />
+                        ) : (
+                          <Sprint classes="w-6 h-6" />
+                        )
+                      }
+                    />
+                  </Motion.button>
+                </Rerun>
+              </Presence>
             </ul>
           </form>
         </div>
