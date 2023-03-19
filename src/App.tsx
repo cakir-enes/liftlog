@@ -436,7 +436,7 @@ const ControlBar = () => {
 
 const App: Component = () => {
   return (
-    <div class="dark min-h-screen flex flex-col bg-black text-white font-[Rubik]">
+    <div class="dark flex flex-col bg-black text-white font-[Rubik]">
       <For each={tools.workouts}>
         {(w, i) => <Workout isActive={i() === 0} workout={w} />}
       </For>
