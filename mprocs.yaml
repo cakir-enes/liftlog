@@ -1,0 +1,7 @@
+procs:
+  lvim:
+    cmd: ["lvim"]
+  dev:
+    cmd: ["yarn", "dev", "--host"]
+  scratch:
+    cmd: ["zsh"]
