@@ -163,7 +163,7 @@ const ControlBar = () => {
 
   type w = "Controls" | "NewSet" | "NewExercise" | "NewWorkout";
 
-  const [what, setWhat] = createSignal<w>("NewWorkout");
+  const [what, setWhat] = createSignal<w>("Controls");
 
   function clickOutside(el, accessor) {
     const onClick = (e) => !el.contains(e.target) && accessor()?.();
