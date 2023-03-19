@@ -17,6 +17,7 @@ import { Modal } from "flowbite";
 import type { ModalOptions, ModalInterface } from "flowbite";
 import { Rerun } from "@solid-primitives/keyed";
 import { Dynamic } from "solid-js/web";
+import { Dumbell, Sprint } from "./icons";
 
 export interface LogData {
   id: number;
@@ -81,8 +82,20 @@ const Workout = (props: { workout: WorkoutData; isActive: boolean }) => {
           </span>
         </div>
         <Show when={props.isActive} fallback={<DetailsBtn />}>
-          <button class="block font-bold px-1 py-[2px] rounded-sm h-min text-xs bg-green-400 text-black">
+          <button class="block flex items-center font-bold px-1 py-[2px] rounded-sm h-min text-xs bg-green-400 text-black">
             FIN
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="w-4 h-4"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
+                clip-rule="evenodd"
+              />
+            </svg>
           </button>
         </Show>
       </div>
@@ -141,7 +154,7 @@ const ControlBar = () => {
   };
 
   type w = "Controls" | "NewSet" | "NewExercise";
-  const [what, setWhat] = createSignal<w>("Controls");
+  const [what, setWhat] = createSignal<w>("NewExercise");
 
   function clickOutside(el, accessor) {
     console.log("wololo");
@@ -150,32 +163,6 @@ const ControlBar = () => {
 
     onCleanup(() => document.body.removeEventListener("click", onClick));
   }
-
-  const Dumbell: Component<{ classes: string }> = ({ classes }) => (
-    <svg
-      class={classes}
-      stroke-width="1.5"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      color="#000000"
-    >
-      <path
-        d="M7.4 7H4.6a.6.6 0 00-.6.6v8.8a.6.6 0 00.6.6h2.8a.6.6 0 00.6-.6V7.6a.6.6 0 00-.6-.6zM19.4 7h-2.8a.6.6 0 00-.6.6v8.8a.6.6 0 00.6.6h2.8a.6.6 0 00.6-.6V7.6a.6.6 0 00-.6-.6z"
-        stroke="#000000"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      ></path>
-      <path
-        d="M1 14.4V9.6a.6.6 0 01.6-.6h1.8a.6.6 0 01.6.6v4.8a.6.6 0 01-.6.6H1.6a.6.6 0 01-.6-.6zM23 14.4V9.6a.6.6 0 00-.6-.6h-1.8a.6.6 0 00-.6.6v4.8a.6.6 0 00.6.6h1.8a.6.6 0 00.6-.6zM8 12h8"
-        stroke="#000000"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      ></path>
-    </svg>
-  );
 
   const NewSet = () => (
     <Motion.div
@@ -232,6 +219,7 @@ const ControlBar = () => {
       </Motion.div>
     </Motion.div>
   );
+  const [newExerciseIsLift, setNewExerciseIsLift] = createSignal(true);
 
   const NewExercise = () => (
     <Motion.div
@@ -249,76 +237,60 @@ const ControlBar = () => {
           use:clickOutside={() => setWhat("Controls")}
         >
           <form class="flex flex-row flex-wrap justify-center gap-4">
-            {/* <div class="flex flex-col items-center w-full "> */}
-            {/*   <label for="simple-search" class="sr-only"> */}
-            {/*     Search */}
-            {/*   </label> */}
-            {/*   <div class="relative w-full"> */}
-            {/*     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"> */}
-            {/*       <svg */}
-            {/*         aria-hidden="true" */}
-            {/*         class="w-5 h-5 text-gray-500 dark:text-gray-400" */}
-            {/*         fill="currentColor" */}
-            {/*         viewBox="0 0 20 20" */}
-            {/*         xmlns="http://www.w3.org/2000/svg" */}
-            {/*       > */}
-            {/*         <path */}
-            {/*           fill-rule="evenodd" */}
-            {/*           d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" */}
-            {/*           clip-rule="evenodd" */}
-            {/*         ></path> */}
-            {/*       </svg> */}
-            {/*     </div> */}
-            {/*     <input */}
-            {/*       type="text" */}
-            {/*       id="simple-search" */}
-            {/*       class="block pl-10 p-2.5 text-xl border-x-0 focus:ring-0 focus:border-b-yellow-900 border-t-0 w-full box-border  border-b-2 border-b-black   bg-transparent" */}
-            {/*       placeholder="Search or Create" */}
-            {/*       required */}
-            {/*     /> */}
-            {/*   </div> */}
-            {/* </div> */}
-            <label
-              for="default-search"
-              class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white"
-            >
-              Search
-            </label>
             <div class="relative flex w-full">
-              <div class="absolute inset-y-0 left-0 flex items-center pl-1 pointer-events-none">
-                <svg
-                  aria-hidden="true"
-                  class="w-5 h-5 text-gray-500 dark:text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  ></path>
-                </svg>
+              <div class="absolute inset-y-0 left-0 flex items-center pl-1">
+                <Presence>
+                  <Rerun on={newExerciseIsLift}>
+                    <Motion.button
+                      class=""
+                      animate={{ rotateY: [90, 0] }}
+                      onClick={() => {
+                        setNewExerciseIsLift((x) => !x);
+                      }}
+                    >
+                      <Dynamic
+                        component={
+                          newExerciseIsLift() ? (
+                            <Dumbell classes="w-6 h-6" />
+                          ) : (
+                            <Sprint classes="w-6 h-6" />
+                          )
+                        }
+                      />
+                    </Motion.button>
+                  </Rerun>
+                </Presence>
               </div>
               <input
-                type="search"
+                type="text"
                 id="default-search"
-                class="block w-full p-4 pl-10 text-sm text-black border-t-0 border-x-0 border-b border-black bg-transparent  "
+                class="block w-full p-0 py-3 pl-10 ring-0 focus:ring-0 focus:border-b-black text-sm text-black border-t-0 border-x-0 border-b border-black bg-transparent"
                 placeholder="Search / Create"
                 required
               />
               <button
                 type="submit"
-                class="text-white absolute right-2.5 bottom-2.5 bg-black  font-medium rounded-md focus:ring-0 focus:border-none text-sm px-1 py-2 "
+                class="text-white absolute right-2.5 bottom-2.5 bg-black  font-medium rounded-md focus:ring-0 focus:border-none text-sm px-1 py-1"
               >
-                Create ›
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="w-4 h-4"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 4.5v15m7.5-7.5h-15"
+                  />
+                </svg>
               </button>
             </div>
             <div class="basis-full h-0 w-0" />
             <ul class="flex flex-wrap justify-start w-full -mt-5 gap-2">
-              <li class="block px-1 bg-black rounded-sm font-semibold text-sm text-white">
+              <li class="block px-1 bg-black rounded-sm font-medium text-sm text-white">
                 lololo
               </li>
               <li class="block px-1 bg-black rounded-sm font-semibold text-sm text-white">
@@ -346,20 +318,7 @@ const ControlBar = () => {
       <button
         type="button"
         class="inline-flex items-center px-4 py-2  bg-transparent border border-gray-100 rounded-l-lg justify-center grow"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          class="w-6 h-6"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
-            clip-rule="evenodd"
-          />
-        </svg>
-      </button>
+      ></button>
 
       <button
         onClick={() => {
