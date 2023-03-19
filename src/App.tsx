@@ -18,23 +18,7 @@ import type { ModalOptions, ModalInterface } from "flowbite";
 import { Rerun } from "@solid-primitives/keyed";
 import { Dynamic } from "solid-js/web";
 import { Dumbell, Sprint } from "./icons";
-
-export interface LogData {
-  id: number;
-  name: string;
-  isCardio: boolean;
-  durationMin: number;
-  sets: { reps: number; weight: number };
-  createdAt: Date;
-  workoutId: number;
-}
-
-export interface WorkoutData {
-  id: number;
-  name: string;
-  createdAt: Date;
-  logs: LogData[];
-}
+import { LogData, tools, WorkoutData, workoutStore } from "./workoutstore";
 
 const Log = (props: { log: LogData; i: Accessor<number> }) => {
   const format = (num: number) => {
@@ -108,6 +92,30 @@ const Workout = (props: { workout: WorkoutData; isActive: boolean }) => {
   );
 };
 
+const BottomSheet: Component<{ classes: string }> = ({ children, classes }) => (
+  <Motion.div
+    class={
+      "h-screen w-screen fixed  top-0 left-0  backdrop-blur bg-black/10 z-20"
+    }
+    animate={{}}
+  >
+    <Motion.div
+      class={
+        "z-50 text-black p-2 bg-gray-200 shadow-sm  rounded-t-md fixed h-[45vh]  bottom-0  left-10 right-10 " +
+        classes
+      }
+      initial={{ y: 2500 }}
+      onViewEnter={() => {
+        console.log("wuhu");
+      }}
+      animate={{ y: 0 }}
+      exit={{ y: [4500] }}
+    >
+      {children}
+    </Motion.div>
+  </Motion.div>
+);
+
 const ControlBar = () => {
   const [showNewMove, setShowNewMove] = createSignal(false);
   let ref;
@@ -153,16 +161,36 @@ const ControlBar = () => {
     setReady(false);
   };
 
-  type w = "Controls" | "NewSet" | "NewExercise";
-  const [what, setWhat] = createSignal<w>("NewExercise");
+  type w = "Controls" | "NewSet" | "NewExercise" | "NewWorkout";
+
+  const [what, setWhat] = createSignal<w>("NewWorkout");
 
   function clickOutside(el, accessor) {
-    console.log("wololo");
     const onClick = (e) => !el.contains(e.target) && accessor()?.();
     document.body.addEventListener("click", onClick);
 
     onCleanup(() => document.body.removeEventListener("click", onClick));
   }
+
+  const NewWorkout = () => (
+    <BottomSheet classes="h-fit">
+      <form class="flex flex-col h-full">
+        <span class="ml-4  w-fit highlight">Workout Name:</span>
+        <input type="text" class="input-simple mx-4" />
+        <button
+          type="submit"
+          class="highlight py-2 text-lg my-4"
+          onClick={(e) => {
+            e.preventDefault();
+            tools.addWorkout("lele");
+            setWhat("Controls");
+          }}
+        >
+          Let's Goo
+        </button>
+      </form>
+    </BottomSheet>
+  );
 
   const NewSet = () => (
     <Motion.div
@@ -186,29 +214,23 @@ const ControlBar = () => {
         >
           <form class="flex flex-col flex-wrap gap-5 mt-3">
             <div class="flex flex-col">
-              <label
-                for="weight-input"
-                class="block mb-2 px-1 rounded-sm bg-black text-white text-sm font-medium"
-              >
+              <label for="weight-input" class="highlight mb-2">
                 Weight:
               </label>
               <input
                 type="number"
                 id="weight-input"
-                class="block text-center mx-auto text-4xl w-[6ch] border-x-0 focus:ring-0 pb-0 focus:border-b-yellow-900 border-t-0 w-full box-border  border-b-2 border-b-black   bg-transparent"
+                class="input-simple w-[6ch]"
               />
             </div>
             <div class="flex flex-col">
-              <label
-                for="reps-input"
-                class="block mb-2 px-1 rounded-sm bg-black text-white text-sm font-medium"
-              >
+              <label for="reps-input" class="highlight mb-2">
                 Reps:
               </label>
               <input
                 type="number"
                 id="reps-input"
-                class="block text-center mx-auto text-4xl border-x-0 w-[4ch] focus:ring-0 pb-0 focus:border-b-yellow-900 border-t-0 w-full box-border  border-b-2 border-b-black   bg-transparent"
+                class="input-simple w-[4ch]"
               />
             </div>
             <button type="submit" class="mx-auto mb-4">
@@ -318,7 +340,20 @@ const ControlBar = () => {
       <button
         type="button"
         class="inline-flex items-center px-4 py-2  bg-transparent border border-gray-100 rounded-l-lg justify-center grow"
-      ></button>
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="w-6 h-6"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 00-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 00-2.282.819l-.922 1.597a1.875 1.875 0 00.432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 000 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 00-.432 2.385l.922 1.597a1.875 1.875 0 002.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 002.28-.819l.923-1.597a1.875 1.875 0 00-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 000-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 00-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 00-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 00-1.85-1.567h-1.843zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
 
       <button
         onClick={() => {
@@ -360,7 +395,12 @@ const ControlBar = () => {
     </Motion.div>
   );
 
-  const WhatComp: Record<w, Component> = { Controls, NewSet, NewExercise };
+  const WhatComp: Record<w, Component> = {
+    Controls,
+    NewSet,
+    NewExercise,
+    NewWorkout,
+  };
 
   return (
     <>
@@ -374,43 +414,11 @@ const ControlBar = () => {
 };
 
 const App: Component = () => {
-  const dummy = {
-    id: 1,
-    name: "Chest",
-    createdAt: new Date(),
-    logs: [
-      {
-        id: 1,
-        name: "Bench Press",
-        isCardio: false,
-        durationMin: 0,
-        sets: [
-          { reps: 10, weight: 45 },
-          { reps: 10, weight: 80 },
-          { reps: 15, weight: 53 },
-        ],
-        createdAt: new Date(),
-        workoutId: 1,
-      },
-      {
-        id: 2,
-        name: "incline",
-        isCardio: false,
-        durationMin: 0,
-        sets: [
-          { reps: 10, weight: 45 },
-          { reps: 10, weight: 80 },
-          { reps: 15, weight: 53 },
-        ],
-        createdAt: new Date(),
-        workoutId: 1,
-      },
-    ],
-  };
   return (
     <div class="dark min-h-screen flex flex-col bg-black text-white font-[Rubik]">
-      <Workout isActive workout={dummy} />
-      <Workout workout={dummy} />
+      <For each={tools.workouts}>
+        {(w, i) => <Workout isActive={i() === 0} workout={w} />}
+      </For>
       <div class="fixed -bottom-0 left-10 right-10 z-50 h-12 ">
         <ControlBar />
       </div>
