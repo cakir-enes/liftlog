@@ -1253,6 +1253,13 @@
     estree-walker "^2.0.2"
     picomatch "^2.3.1"
 
+"@solid-primitives/autofocus@^0.0.102":
+  version "0.0.102"
+  resolved "https://registry.yarnpkg.com/@solid-primitives/autofocus/-/autofocus-0.0.102.tgz#1a6a8b090e80637ceaf627723818c769806ce4fa"
+  integrity sha512-a6HQBZwgX/I/k1IAKpBSX7RZJ0hIiUjK5QbFCgEh079THSexPDLxuTjJvyLl7TLN1WrGsJvzom0ka2Aa121p9Q==
+  dependencies:
+    "@solid-primitives/utils" "^5.4.0"
+
 "@solid-primitives/keyed@^1.1.8":
   version "1.1.8"
   resolved "https://registry.yarnpkg.com/@solid-primitives/keyed/-/keyed-1.1.8.tgz#4fa295c35f4c13e64f118897634d45874e8fdc8b"
@@ -1262,6 +1269,18 @@
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/@solid-primitives/props/-/props-3.1.2.tgz#84945d474fb6772da4c5260116092b70bea3cda3"
   integrity sha512-d5HUGpTvNVRSJD4VUxqgdwdNap8b+dWDW+BnjKS2z+w0w/gxgkEr+RF0OJ6CNB3kBZ7yhPW4ApHnei7vrgAPFQ==
+  dependencies:
+    "@solid-primitives/utils" "^5.4.0"
+
+"@solid-primitives/scheduled@^1.3.1":
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/@solid-primitives/scheduled/-/scheduled-1.3.1.tgz#00cbc05c21575b81cf659ce3608faf779fd17b72"
+  integrity sha512-3tEyYAoGteeSMjXh1HfX1MteU9PpEP8cq0w26ffa3xScaN/EklonZZiy1ajJJuen/WQ5f2zZ3WmHCMnLMbURow==
+
+"@solid-primitives/storage@^1.3.7":
+  version "1.3.7"
+  resolved "https://registry.yarnpkg.com/@solid-primitives/storage/-/storage-1.3.7.tgz#5f8351fe112b6b80ba7358c421979180c64f858c"
+  integrity sha512-otyVkdIiBAU1JmbhRfFvt6mV62ZhQnWBe/+dgCS6ITAHDZ49VysSshdV99uWI33khhOBVnL/aCGEoSx05853jg==
   dependencies:
     "@solid-primitives/utils" "^5.4.0"
 

@@ -1,4 +1,4 @@
-import { createStore, unwrap } from "solid-js/store";
+import { createStore, produce, unwrap } from "solid-js/store";
 export interface LogData {
   id: number;
   name: string;
@@ -50,20 +50,83 @@ const dummy = {
 };
 
 export const [workoutStore, setWorkoutStore] = createStore({
-  workouts: [dummy] as WorkoutData[],
+  workouts: [] as WorkoutData[],
+  activeWorkoutID: undefined as undefined | number,
+  exerciseNames: [] as string[],
 });
 
 export const tools = {
   get workouts() {
     return workoutStore.workouts;
   },
+  get activeWorkoutID() {
+    return workoutStore.activeWorkoutID;
+  },
+  get exerciseNames() {
+    return ["Bench Press", "Incline Press", "Squat", "Deadlift", "Pullups"];
+  },
+  addExercise: (workoutID: number, name: string, isCardio: boolean) => {
+    const workout = unwrap(workoutStore.workouts).find(
+      (x) => x.id === workoutID
+    );
+    if (!workout) {
+      throw new Error("No workout found");
+    }
+    const log = Promise.resolve({
+      id: workout.logs.length,
+      name,
+      isCardio,
+      durationMin: 0,
+      sets: [],
+      createdAt: new Date(),
+      workoutId: workoutID,
+    } as LogData);
+
+    log.then((x) =>
+      setWorkoutStore("workouts", (l) =>
+        l.map((w) =>
+          w.id === workoutID
+            ? {
+                ...w,
+                logs: [...w.logs, x],
+              }
+            : w
+        )
+      )
+    );
+  },
+  addRep: (workoutID: number, logID: number, reps: number, weight: number) => {
+    const log = unwrap(workoutStore.workouts)
+      .find((x) => x.id === workoutID)
+      ?.logs.find((x) => x.id === logID);
+    console.log(
+      "ahanda ",
+      unwrap(workoutStore.workouts).find((x) => x.id === workoutID),
+      "og",
+      logID
+    );
+    if (!log) {
+      throw new Error("No log found");
+    }
+    setWorkoutStore(
+      produce((s) => {
+        s.workouts
+          .find((x) => x.id === workoutID)
+          ?.logs.find((x) => x.id === logID)
+          ?.sets.push({ reps, weight });
+      })
+    );
+  },
   addWorkout: (name: string) => {
     const workout = Promise.resolve({
-      id: 3,
+      id: workoutStore.workouts.length,
       name,
       createdAt: new Date(),
       logs: [] as LogData[],
     } as WorkoutData);
-    workout.then((x) => setWorkoutStore("workouts", (l) => [x, ...l]));
+    workout.then((x) => {
+      setWorkoutStore("activeWorkoutID", x.id);
+      setWorkoutStore("workouts", (l) => [x, ...l]);
+    });
   },
 };

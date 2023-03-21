@@ -9,6 +9,8 @@ import {
   onCleanup,
   children,
   JSXElement,
+  createEffect,
+  on,
 } from "solid-js";
 
 import logo from "./logo.svg";
@@ -22,8 +24,12 @@ import { Dynamic } from "solid-js/web";
 import { Dumbell, Sprint } from "./icons";
 import { LogData, tools, WorkoutData, workoutStore } from "./workoutstore";
 import { clickOutsideDirective } from "./directives";
+import { debounce } from "@solid-primitives/scheduled";
+import { autofocus } from "@solid-primitives/autofocus";
+import { unwrap } from "solid-js/store";
 
 const clickOutside = clickOutsideDirective;
+const afocus = autofocus;
 
 const Log = (props: { log: LogData; i: Accessor<number> }) => {
   const format = (num: number) => {
@@ -72,19 +78,7 @@ const Workout = (props: { workout: WorkoutData; isActive: boolean }) => {
         </div>
         <Show when={props.isActive} fallback={<DetailsBtn />}>
           <button class="block flex items-center font-bold px-1 py-[2px] rounded-sm h-min text-xs bg-green-400 text-black">
-            FIN
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              class="w-4 h-4"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
-                clip-rule="evenodd"
-              />
-            </svg>
+            FINISH
           </button>
         </Show>
       </div>
@@ -97,14 +91,14 @@ const Workout = (props: { workout: WorkoutData; isActive: boolean }) => {
   );
 };
 
-const BottomSheet: Component<{ children?: JSXElement; classes: string }> = (
+const BottomSheet: Component<{ children?: JSXElement; classes?: string }> = (
   props
 ) => {
   const c = children(() => props.children);
   return (
     <Motion.div
       class={
-        "h-screen w-screen fixed  top-0 left-0  backdrop-blur bg-black/10 z-20"
+        "h-screen w-screen fixed  top-0 left-0  backdrop-blur bg-black/10 z-20 pb-4"
       }
       animate={{}}
     >
@@ -127,102 +121,148 @@ const BottomSheet: Component<{ children?: JSXElement; classes: string }> = (
 };
 
 const ControlBar = () => {
-  type w = "Controls" | "NewSet" | "NewExercise" | "NewWorkout";
+  type w =
+    | "Controls"
+    | "NewSet"
+    | "NewExercise"
+    | "NewWorkout"
+    | "FirstWorkout";
 
   const [what, setWhat] = createSignal<w>("Controls");
 
-  const NewWorkout = () => (
-    <BottomSheet classes="h-fit">
-      <form class="flex flex-col h-full">
-        <span class="ml-4  w-fit highlight">Workout Name:</span>
-        <input type="text" class="input-simple mx-4" />
-        <button
-          type="submit"
-          class="highlight py-2 text-lg my-4"
-          onClick={(e) => {
+  if (
+    tools.workouts[tools.workouts.length - 1]?.createdAt.getDate() !==
+    new Date().getDate()
+  ) {
+    setWhat("FirstWorkout");
+  }
+
+  const NewWorkout = () => {
+    const [name, setName] = createSignal("");
+
+    return (
+      <BottomSheet classes="h-fit">
+        <form
+          class="flex flex-col h-full"
+          onSubmit={(e) => {
             e.preventDefault();
-            tools.addWorkout("lele");
+            tools.addWorkout(name());
             setWhat("Controls");
           }}
         >
-          Let's Goo
-        </button>
-      </form>
+          <span class="w-fit highlight">Workout Name:</span>
+          <input
+            type="text"
+            autofocus
+            use:afocus
+            class="input-simple flex w-full"
+            value={name()}
+            onChange={(e) => setName(e.currentTarget.value)}
+          />
+          <button type="submit" class="highlight py-2 text-lg my-4">
+            Let's Goo
+          </button>
+        </form>
+      </BottomSheet>
+    );
+  };
+
+  const NewSet = () => (
+    <BottomSheet>
+      <div
+        class="flex flex-col h-full w-full items-center text-center"
+        use:clickOutside={() => {
+          setWhat("Controls");
+        }}
+      >
+        <form
+          class="flex flex-col flex-wrap gap-5 mt-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            console.log(tools.workouts);
+            tools.addRep(
+              tools.activeWorkoutID,
+              tools.workouts[tools.workouts.length - 1].logs.length - 1,
+              +e.currentTarget[0].value,
+              +e.currentTarget[1].value
+            );
+            setWhat("Controls");
+          }}
+        >
+          <div class="flex flex-col">
+            <label for="weight-input" class="highlight mb-2">
+              Weight:
+            </label>
+            <input
+              type="number"
+              id="weight-input"
+              class="input-simple w-[6ch]"
+            />
+          </div>
+          <div class="flex flex-col">
+            <label for="reps-input" class="highlight mb-2">
+              Reps:
+            </label>
+            <input type="number" id="reps-input" class="input-simple w-[4ch]" />
+          </div>
+          <button type="submit" class="mx-auto mb-4">
+            <Dumbell classes="w-16 h-16 " />
+          </button>
+        </form>
+      </div>
     </BottomSheet>
   );
 
-  const NewSet = () => (
-    <Motion.div
-      class="h-screen w-screen fixed  top-0 left-0  backdrop-blur bg-black/10 z-20"
-      animate={{}}
-    >
-      <Motion.div
-        class="z-50 text-black p-2 bg-gray-200 shadow-sm  rounded-t-md fixed h-[45vh]  bottom-0  left-10 right-10"
-        initial={{ y: 2500 }}
-        onViewEnter={() => {
-          console.log("wuhu");
-        }}
-        animate={{ y: 0 }}
-        exit={{ y: [4500] }}
-      >
-        <div
-          class="flex flex-col h-full w-full items-center text-center"
-          use:clickOutside={() => {
-            setWhat("Controls");
-          }}
-        >
-          <form class="flex flex-col flex-wrap gap-5 mt-3">
-            <div class="flex flex-col">
-              <label for="weight-input" class="highlight mb-2">
-                Weight:
-              </label>
-              <input
-                type="number"
-                id="weight-input"
-                class="input-simple w-[6ch]"
-              />
-            </div>
-            <div class="flex flex-col">
-              <label for="reps-input" class="highlight mb-2">
-                Reps:
-              </label>
-              <input
-                type="number"
-                id="reps-input"
-                class="input-simple w-[4ch]"
-              />
-            </div>
-            <button type="submit" class="mx-auto mb-4">
-              <Dumbell classes="w-16 h-16 " />
-            </button>
-          </form>
-        </div>
-      </Motion.div>
-    </Motion.div>
-  );
-  const [newExerciseIsLift, setNewExerciseIsLift] = createSignal(true);
+  const NewExercise = () => {
+    const [newExerciseIsLift, setNewExerciseIsLift] = createSignal(true);
+    const [exercise, setExercise] = createSignal("");
+    const [results, setResults] = createSignal<string[]>([]);
+    const filter = debounce(
+      () =>
+        setResults(
+          exercise() === ""
+            ? []
+            : tools.exerciseNames.filter((x) => x.includes(exercise()))
+        ),
+      250
+    );
+    createEffect(
+      on(
+        exercise,
+        () => {
+          filter();
+        },
+        { defer: true }
+      )
+    );
 
-  const NewExercise = () => (
-    <Motion.div
-      class="h-screen w-screen fixed  top-0 left-0  backdrop-blur bg-black/10 z-20"
-      animate={{}}
-    >
-      <Motion.div
-        class="z-50 text-black p-2 bg-gray-200 shadow-sm  rounded-t-md fixed h-[40vh]  bottom-0  left-10 right-10"
-        initial={{ y: 2500 }}
-        animate={{ y: 0 }}
-        exit={{ y: [4500] }}
-      >
+    return (
+      <BottomSheet>
         <div
           class="flex flex-col h-full w-full items-center text-center"
           use:clickOutside={() => setWhat("Controls")}
         >
-          <form class="flex flex-row flex-wrap justify-center gap-4">
+          <form
+            class="flex flex-row flex-wrap justify-center gap-4 w-full"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!!tools.activeWorkoutID) {
+                throw new Error("no active id");
+              }
+              tools.addExercise(
+                tools.activeWorkoutID,
+                exercise(),
+                newExerciseIsLift()
+              );
+              setWhat("Controls");
+            }}
+          >
             <div class="relative flex w-full">
               <div class="absolute inset-y-0 left-0 flex items-center pl-1">
                 <Presence>
                   <Rerun on={newExerciseIsLift}>
                     <Motion.button
+                      type="button"
                       class=""
                       animate={{ rotateY: [90, 0] }}
                       onClick={() => {
@@ -241,9 +281,13 @@ const ControlBar = () => {
               </div>
               <input
                 type="text"
+                use:afocus
+                autofocus
                 id="default-search"
-                class="block w-full p-0 py-3 pl-10 ring-0 focus:ring-0 focus:border-b-black text-sm text-black border-t-0 border-x-0 border-b border-black bg-transparent"
+                class="block w-full p-0 py-3 pl-10 ring-0 focus:ring-0 focus:border-b-black text-black border-t-0 border-x-0 border-b border-black bg-transparent"
                 placeholder="Search / Create"
+                value={exercise()}
+                onInput={(e) => setExercise(e.currentTarget.value)}
                 required
               />
               <button
@@ -268,42 +312,19 @@ const ControlBar = () => {
             </div>
             <div class="basis-full h-0 w-0" />
             <ul class="flex flex-wrap justify-start w-full -mt-5 gap-2">
-              <li class="block px-1 bg-black rounded-sm font-medium text-sm text-white">
-                lololo
-              </li>
-              <li class="block px-1 bg-black rounded-sm font-semibold text-sm text-white">
-                wiii
-              </li>
-              <li class="block px-1 bg-black rounded-sm font-semibold text-sm text-white">
-                wowo ow owo wo a
-              </li>
-              <Presence>
-                <Rerun on={newExerciseIsLift}>
-                  <Motion.button
-                    class=""
-                    animate={{ rotateY: [90, 0] }}
-                    onClick={() => {
-                      setNewExerciseIsLift((x) => !x);
-                    }}
-                  >
-                    <Dynamic
-                      component={
-                        newExerciseIsLift() ? (
-                          <Dumbell classes="w-6 h-6" />
-                        ) : (
-                          <Sprint classes="w-6 h-6" />
-                        )
-                      }
-                    />
-                  </Motion.button>
-                </Rerun>
-              </Presence>
+              <For each={results()}>
+                {(x) => (
+                  <li class="block px-1 bg-black rounded-sm font-medium text-sm text-white">
+                    {x}
+                  </li>
+                )}
+              </For>
             </ul>
           </form>
         </div>
-      </Motion.div>
-    </Motion.div>
-  );
+      </BottomSheet>
+    );
+  };
 
   const Controls = () => (
     <Motion.div
@@ -370,11 +391,25 @@ const ControlBar = () => {
     </Motion.div>
   );
 
+  const FirstWorkout = () => {
+    return (
+      <div class="bg-green-400 h-full flex justify-center rounded-t-md">
+        <button
+          class="inline-flex text-xl font-bold items-center px-4 py-2  bg-transparent  rounded-l-lg justify-center grow"
+          onClick={() => setWhat("NewWorkout")}
+        >
+          New Workout
+        </button>
+      </div>
+    );
+  };
+
   const WhatComp: Record<w, Component> = {
     Controls,
     NewSet,
     NewExercise,
     NewWorkout,
+    FirstWorkout,
   };
 
   return (
@@ -394,7 +429,7 @@ const App: Component = () => {
       <For each={tools.workouts}>
         {(w, i) => <Workout isActive={i() === 0} workout={w} />}
       </For>
-      <div class="fixed -bottom-0 left-10 right-10 z-50 h-12 ">
+      <div class="fixed -bottom-0 left-10 right-10 z-50 h-16">
         <ControlBar />
       </div>
     </div>
