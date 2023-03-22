@@ -27,9 +27,21 @@ import { clickOutsideDirective } from "./directives";
 import { debounce } from "@solid-primitives/scheduled";
 import { autofocus } from "@solid-primitives/autofocus";
 import { unwrap } from "solid-js/store";
+import { useRegisterSW } from "virtual:pwa-register/solid";
 
 const clickOutside = clickOutsideDirective;
 const afocus = autofocus;
+
+const intervalMS = 60 * 60 * 1000;
+
+const updateServiceWorker = useRegisterSW({
+  onRegistered(r) {
+    r &&
+      setInterval(() => {
+        r.update();
+      }, intervalMS);
+  },
+});
 
 const Log = (props: { log: LogData; i: Accessor<number> }) => {
   const format = (num: number) => {
@@ -141,7 +153,7 @@ const ControlBar = () => {
     const [name, setName] = createSignal("");
 
     return (
-      <BottomSheet classes="h-fit">
+      <BottomSheet classes="h-40">
         <form
           class="flex flex-col h-full"
           onSubmit={(e) => {
@@ -424,6 +436,7 @@ const ControlBar = () => {
 };
 
 const App: Component = () => {
+  updateServiceWorker.updateServiceWorker();
   return (
     <div class="dark flex flex-col bg-black text-white font-[Rubik]">
       <For each={tools.workouts}>
