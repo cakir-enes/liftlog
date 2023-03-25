@@ -110,13 +110,13 @@ const BottomSheet: Component<{ children?: JSXElement; classes?: string }> = (
   return (
     <Motion.div
       class={
-        "h-screen w-screen fixed  top-0 left-0  backdrop-blur bg-black/10 z-20 pb-4"
+        "h-[100svh] w-screen fixed  top-0 left-0  backdrop-blur bg-black/10 z-20 pb-4"
       }
       animate={{}}
     >
       <Motion.div
         class={
-          "z-50 text-black p-2 bg-gray-200 shadow-sm  rounded-t-md fixed h-[45vh]  bottom-0  left-10 right-10 " +
+          "z-50 text-black p-2 bg-gray-200 shadow-sm  rounded-t-md fixed bottom-0  left-10 right-10 " +
           props.classes
         }
         initial={{ y: 2500 }}
@@ -297,6 +297,12 @@ const ControlBar = () => {
                 autofocus
                 id="default-search"
                 class="block w-full p-0 py-3 pl-10 ring-0 focus:ring-0 focus:border-b-black text-black border-t-0 border-x-0 border-b border-black bg-transparent"
+                onFocus={() => {
+                  console.log("ahanda focuso", window.scrollY);
+                }}
+                onBlur={() => {
+                  window.scrollTo(0, 0);
+                }}
                 placeholder="Search / Create"
                 value={exercise()}
                 onInput={(e) => setExercise(e.currentTarget.value)}
@@ -437,13 +443,27 @@ const ControlBar = () => {
 
 const App: Component = () => {
   updateServiceWorker.updateServiceWorker();
+
+  // window.visualViewport?.addEventListener("resize", () => {
+  //   for (const el of window.document.getElementsByClassName("lego")) {
+  //     // el.style.height = window.visualViewport?.height.toString() + "px";
+  //     el.style.height = "100vh";
+  //     document.getElementsByTagName("html")[0].style.height = "100vh";
+  //   }
+  //   console.log("resize", window.visualViewport?.height);
+  // });
+
   return (
-    <div class="dark flex flex-col bg-black text-white font-[Rubik]">
-      <For each={tools.workouts}>
-        {(w, i) => <Workout isActive={i() === 0} workout={w} />}
-      </For>
-      <div class="fixed -bottom-0 left-10 right-10 z-50 h-16">
-        <ControlBar />
+    <div class="dark lego flex flex-col  text-white font-[Rubik] max-h-[100svh] relative grid-rows-1 overflow-hidden bg-gradient-to-t from-gray-900">
+      <div class=" lego overflow-auto pb-16 flex flex-col">
+        <For each={tools.workouts}>
+          {(w, i) => <Workout isActive={i() === 0} workout={w} />}
+        </For>
+      </div>
+      <div class="fixed -bottom-0 left-0 right-0 z-50 h-16 filter backdrop-brightness-90 pt-2">
+        <div class="absolute left-10 right-10  z-50 h-full">
+          <ControlBar />
+        </div>
       </div>
     </div>
   );

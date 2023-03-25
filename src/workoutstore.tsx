@@ -50,7 +50,7 @@ const dummy = {
 };
 
 export const [workoutStore, setWorkoutStore] = createStore({
-  workouts: [] as WorkoutData[],
+  workouts: [dummy, dummy, dummy, dummy, dummy] as WorkoutData[],
   activeWorkoutID: undefined as undefined | number,
   exerciseNames: [] as string[],
 });
