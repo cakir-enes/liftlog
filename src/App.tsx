@@ -293,7 +293,6 @@ const ControlBar = () => {
               </div>
               <input
                 type="text"
-                use:afocus
                 autofocus
                 id="default-search"
                 class="block w-full p-0 py-3 pl-10 ring-0 focus:ring-0 focus:border-b-black text-black border-t-0 border-x-0 border-b border-black bg-transparent"
@@ -460,7 +459,8 @@ const App: Component = () => {
           {(w, i) => <Workout isActive={i() === 0} workout={w} />}
         </For>
       </div>
-      <div class="fixed -bottom-0 left-0 right-0 z-50 h-16 filter backdrop-brightness-90 pt-2">
+      <div class="fixed -bottom-0 left-0 right-0 z-50 h-16  ">
+        <div class="absolute left-0 right-0  z-50  h-32 bottom-0 filter backdrop-brightness-75" />
         <div class="absolute left-10 right-10  z-50 h-full">
           <ControlBar />
         </div>
