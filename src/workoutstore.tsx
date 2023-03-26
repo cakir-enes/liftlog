@@ -48,9 +48,91 @@ const dummy = {
     },
   ],
 };
+const addExercise = (workoutID: number, name: string, isCardio: boolean) => {
+  const workout = unwrap(workoutStore.workouts).find((x) => x.id === workoutID);
+  if (!workout) {
+    throw new Error("No workout found");
+  }
+  const log = Promise.resolve({
+    id: workout.logs.length + 1,
+    name,
+    isCardio,
+    durationMin: 0,
+    sets: [],
+    createdAt: new Date(),
+    workoutId: workoutID,
+  } as LogData);
+
+  log.then((x) =>
+    setWorkoutStore("workouts", (l) =>
+      l.map((w) =>
+        w.id === workoutID
+          ? {
+              ...w,
+              logs: [...w.logs, x],
+            }
+          : w
+      )
+    )
+  );
+};
+
+const addRep = (
+  workoutID: number,
+  logID: number,
+  reps: number,
+  weight: number
+) => {
+  const log = workoutStore.workouts
+    .find((x) => x.id === workoutID)
+    ?.logs.find((x) => x.id === logID);
+  console.log("log ", log);
+  if (!log) {
+    throw new Error("No log found");
+  }
+  setWorkoutStore(
+    produce((s) => {
+      s.workouts
+        .find((x) => x.id === workoutID)
+        ?.logs.find((x) => x.id === logID)
+        ?.sets.push({ reps, weight });
+    })
+  );
+};
+
+const repeatLastRep = (workoutID: number, logID: number) => {
+  const lastLog = workoutStore.workouts
+    .find((x) => x.id === workoutID)
+    ?.logs.find((x) => x.id === logID);
+  if (lastLog?.sets.length && lastLog.sets.length > 0) {
+    const lastSet = lastLog.sets[lastLog.sets.length - 1];
+    addRep(workoutID, logID, lastSet.reps, lastSet.weight);
+  }
+};
+
+const addWorkout = (name: string) => {
+  const workout = Promise.resolve({
+    id: workoutStore.workouts.length,
+    name,
+    createdAt: new Date(),
+    logs: [] as LogData[],
+  } as WorkoutData);
+  workout.then((x) => {
+    setWorkoutStore("activeWorkoutID", x.id);
+    setWorkoutStore("workouts", (l) => [x, ...l]);
+  });
+};
+
+const load = () => {
+  setWorkoutStore({
+    workouts: [dummy, dummy, dummy, dummy, dummy],
+    activeWorkoutID: dummy.id,
+    exerciseNames: Array.from(new Set(dummy.logs.map((x) => x.name)).values()),
+  });
+};
 
 export const [workoutStore, setWorkoutStore] = createStore({
-  workouts: [dummy, dummy, dummy, dummy, dummy] as WorkoutData[],
+  workouts: [] as WorkoutData[],
   activeWorkoutID: undefined as undefined | number,
   exerciseNames: [] as string[],
 });
@@ -65,68 +147,9 @@ export const tools = {
   get exerciseNames() {
     return ["Bench Press", "Incline Press", "Squat", "Deadlift", "Pullups"];
   },
-  addExercise: (workoutID: number, name: string, isCardio: boolean) => {
-    const workout = unwrap(workoutStore.workouts).find(
-      (x) => x.id === workoutID
-    );
-    if (!workout) {
-      throw new Error("No workout found");
-    }
-    const log = Promise.resolve({
-      id: workout.logs.length,
-      name,
-      isCardio,
-      durationMin: 0,
-      sets: [],
-      createdAt: new Date(),
-      workoutId: workoutID,
-    } as LogData);
-
-    log.then((x) =>
-      setWorkoutStore("workouts", (l) =>
-        l.map((w) =>
-          w.id === workoutID
-            ? {
-                ...w,
-                logs: [...w.logs, x],
-              }
-            : w
-        )
-      )
-    );
-  },
-  addRep: (workoutID: number, logID: number, reps: number, weight: number) => {
-    const log = unwrap(workoutStore.workouts)
-      .find((x) => x.id === workoutID)
-      ?.logs.find((x) => x.id === logID);
-    console.log(
-      "ahanda ",
-      unwrap(workoutStore.workouts).find((x) => x.id === workoutID),
-      "og",
-      logID
-    );
-    if (!log) {
-      throw new Error("No log found");
-    }
-    setWorkoutStore(
-      produce((s) => {
-        s.workouts
-          .find((x) => x.id === workoutID)
-          ?.logs.find((x) => x.id === logID)
-          ?.sets.push({ reps, weight });
-      })
-    );
-  },
-  addWorkout: (name: string) => {
-    const workout = Promise.resolve({
-      id: workoutStore.workouts.length,
-      name,
-      createdAt: new Date(),
-      logs: [] as LogData[],
-    } as WorkoutData);
-    workout.then((x) => {
-      setWorkoutStore("activeWorkoutID", x.id);
-      setWorkoutStore("workouts", (l) => [x, ...l]);
-    });
-  },
+  addExercise,
+  addRep,
+  repeatLastRep,
+  addWorkout,
+  load,
 };

@@ -48,11 +48,26 @@ const Log = (props: { log: LogData; i: Accessor<number> }) => {
     return (num < 10 ? `0${num}` : num) + "/";
   };
 
+  const [rep, setRep] = createSignal(false);
+
   return (
-    <div class="flex w-full font-bold">
+    <Motion.div
+      class="flex w-full font-bold"
+      onDblClick={() => {
+        if (props.log.sets.length > 0) {
+          setRep(!rep());
+          tools.repeatLastRep(props.log.workoutId, props.log.id);
+        }
+      }}
+      animate={{
+        background: ["white", "none", rep()],
+        color: ["black", "white", rep()],
+      }}
+      transition={{ duration: 0.5 }}
+    >
       <div class="flex flex-col">
-        <span class="text-sm text-gray-400">{format(props.i() + 1)}</span>
-        <span class="text-md text-gray-100">{props.log.name}</span>
+        <span class="text-sm text-gray-600">{format(props.i() + 1)}</span>
+        <span class="text-md ">{props.log.name}</span>
       </div>
       <div class="flex justify-end grow gap-3 items-center">
         <For each={props.log.sets}>
@@ -65,7 +80,7 @@ const Log = (props: { log: LogData; i: Accessor<number> }) => {
           )}
         </For>
       </div>
-    </div>
+    </Motion.div>
   );
 };
 
@@ -79,7 +94,7 @@ const Workout = (props: { workout: WorkoutData; isActive: boolean }) => {
   );
 
   return (
-    <div class="rounded-lg shadow-lg p-4 ">
+    <div class="rounded-lg p-4 ">
       <div class="flex mb-4 items-center justify-between">
         <div class="flex items-center">
           <span class="text-lg font-bold block">{props.workout.name}</span>
@@ -192,9 +207,16 @@ const ControlBar = () => {
           onSubmit={(e) => {
             e.preventDefault();
             console.log(tools.workouts);
+            const workout = tools.workouts[tools.workouts.length - 1];
+            if (!workout) throw new Error("no workout ");
+            console.log(
+              "workout logs len",
+              workout.logs.length,
+              unwrap(workout)
+            );
             tools.addRep(
-              tools.activeWorkoutID,
-              tools.workouts[tools.workouts.length - 1].logs.length - 1,
+              workout.id,
+              workout.logs[workout.logs.length - 1].id,
               +e.currentTarget[0].value,
               +e.currentTarget[1].value
             );
@@ -258,7 +280,8 @@ const ControlBar = () => {
             class="flex flex-row flex-wrap justify-center gap-4 w-full"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!!tools.activeWorkoutID) {
+              console.log("activo", tools.activeWorkoutID);
+              if (tools.activeWorkoutID === undefined) {
                 throw new Error("no active id");
               }
               tools.addExercise(
@@ -451,6 +474,8 @@ const App: Component = () => {
   //   }
   //   console.log("resize", window.visualViewport?.height);
   // });
+  //
+  tools.load();
 
   return (
     <div class="dark lego flex flex-col  text-white font-[Rubik] max-h-[100svh] relative grid-rows-1 overflow-hidden bg-gradient-to-t from-gray-900">
@@ -460,7 +485,7 @@ const App: Component = () => {
         </For>
       </div>
       <div class="fixed -bottom-0 left-0 right-0 z-50 h-16  ">
-        <div class="absolute left-0 right-0  z-50  h-32 bottom-0 filter backdrop-brightness-75" />
+        <div class="absolute left-0 right-0  z-50  h-32 bottom-0 filter backdrop-brightness-90" />
         <div class="absolute left-10 right-10  z-50 h-full">
           <ControlBar />
         </div>
