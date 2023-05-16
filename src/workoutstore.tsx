@@ -15,38 +15,54 @@ export interface WorkoutData {
   createdAt: Date;
   logs: LogData[];
 }
-const dummy = {
-  id: 1,
-  name: "Chest",
-  createdAt: new Date(),
-  logs: [
-    {
-      id: 1,
-      name: "Bench Press",
-      isCardio: false,
-      durationMin: 0,
-      sets: [
-        { reps: 10, weight: 45 },
-        { reps: 10, weight: 80 },
-        { reps: 15, weight: 53 },
-      ],
-      createdAt: new Date(),
-      workoutId: 1,
-    },
-    {
-      id: 2,
-      name: "incline",
-      isCardio: false,
-      durationMin: 0,
-      sets: [
-        { reps: 10, weight: 45 },
-        { reps: 10, weight: 80 },
-        { reps: 15, weight: 53 },
-      ],
-      createdAt: new Date(),
-      workoutId: 1,
-    },
-  ],
+const d = new Date();
+d.setDate(d.getDate() - 1);
+
+function uuidv4() {
+  return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
+    (
+      c ^
+      (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+    ).toString(16)
+  );
+}
+
+const dummy = (i: number) => {
+  const wid = uuidv4();
+
+  return {
+    id: wid,
+    name: "Chest",
+    createdAt: d,
+    logs: [
+      {
+        id: uuidv4(),
+        name: "Bench Press",
+        isCardio: false,
+        durationMin: 0,
+        sets: [
+          { reps: 10, weight: 45 },
+          { reps: 10, weight: 80 },
+          { reps: 15, weight: 53 },
+        ],
+        createdAt: d,
+        workoutId: wid,
+      },
+      {
+        id: uuidv4(),
+        name: "incline",
+        isCardio: false,
+        durationMin: 0,
+        sets: [
+          { reps: 10, weight: 45 },
+          { reps: 10, weight: 80 },
+          { reps: 15, weight: 53 },
+        ],
+        createdAt: d,
+        workoutId: wid,
+      },
+    ],
+  };
 };
 const addExercise = (workoutID: number, name: string, isCardio: boolean) => {
   const workout = unwrap(workoutStore.workouts).find((x) => x.id === workoutID);
@@ -78,24 +94,42 @@ const addExercise = (workoutID: number, name: string, isCardio: boolean) => {
 };
 
 const addRep = (
-  workoutID: number,
-  logID: number,
   reps: number,
-  weight: number
+  weight: number,
+  logID?: number,
+  workoutID?: number
 ) => {
-  const log = workoutStore.workouts
-    .find((x) => x.id === workoutID)
-    ?.logs.find((x) => x.id === logID);
-  console.log("log ", log);
-  if (!log) {
-    throw new Error("No log found");
-  }
   setWorkoutStore(
     produce((s) => {
-      s.workouts
-        .find((x) => x.id === workoutID)
-        ?.logs.find((x) => x.id === logID)
-        ?.sets.push({ reps, weight });
+      if (workoutID !== undefined) {
+        const workout = s.workouts.find((x) => x.id === workoutID);
+        if (!workout) {
+          throw new Error("No workout found");
+        }
+        if (logID !== undefined) {
+          const log = workout.logs.find((x) => x.id === logID);
+          if (!log) {
+            throw new Error("No log found");
+          }
+          log.sets.push({ reps, weight });
+        } else {
+          workout.logs[0].sets.push({ reps, weight });
+        }
+        return;
+      }
+      const workout = s.workouts.find((x) => x.id === s.activeWorkoutID);
+      if (!workout) {
+        throw new Error("No workout found");
+      }
+      if (logID !== undefined) {
+        const log = workout.logs.find((x) => x.id === logID);
+        if (!log) {
+          throw new Error("No log found");
+        }
+        log.sets.push({ reps, weight });
+      } else {
+        workout.logs[0].sets.push({ reps, weight });
+      }
     })
   );
 };
@@ -106,7 +140,7 @@ const repeatLastRep = (workoutID: number, logID: number) => {
     ?.logs.find((x) => x.id === logID);
   if (lastLog?.sets.length && lastLog.sets.length > 0) {
     const lastSet = lastLog.sets[lastLog.sets.length - 1];
-    addRep(workoutID, logID, lastSet.reps, lastSet.weight);
+    addRep(lastSet.reps, lastSet.weight, logID, workoutID);
   }
 };
 
@@ -118,16 +152,23 @@ const addWorkout = (name: string) => {
     logs: [] as LogData[],
   } as WorkoutData);
   workout.then((x) => {
-    setWorkoutStore("activeWorkoutID", x.id);
-    setWorkoutStore("workouts", (l) => [x, ...l]);
+    setWorkoutStore(
+      produce((s) => {
+        s.workouts.unshift(x);
+        s.activeWorkoutID = x.id;
+      })
+    );
+    // setWorkoutStore("activeWorkoutID", x.id);
+    // setWorkoutStore("workouts", (l) => [x, ...l]);
   });
 };
 
 const load = () => {
+  const d = dummy(0);
   setWorkoutStore({
-    workouts: [dummy, dummy, dummy, dummy, dummy],
-    activeWorkoutID: dummy.id,
-    exerciseNames: Array.from(new Set(dummy.logs.map((x) => x.name)).values()),
+    workouts: [d, dummy(2), dummy(5)],
+    activeWorkoutID: d.id,
+    exerciseNames: Array.from(new Set(d.logs.map((x) => x.name)).values()),
   });
 };
 

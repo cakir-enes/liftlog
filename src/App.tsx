@@ -103,11 +103,7 @@ const Workout = (props: { workout: WorkoutData; isActive: boolean }) => {
             {props.workout.createdAt.toLocaleDateString()}
           </span>
         </div>
-        <Show when={props.isActive} fallback={<DetailsBtn />}>
-          <button class="block flex items-center font-bold px-1 py-[2px] rounded-sm h-min text-xs bg-green-400 text-black">
-            FINISH
-          </button>
-        </Show>
+        <DetailsBtn />
       </div>
       <div class="flex flex-col gap-2">
         <For each={props.workout.logs}>
@@ -181,7 +177,6 @@ const ControlBar = () => {
           <input
             type="text"
             autofocus
-            use:afocus
             class="input-simple flex w-full"
             value={name()}
             onChange={(e) => setName(e.currentTarget.value)}
@@ -209,17 +204,7 @@ const ControlBar = () => {
             console.log(tools.workouts);
             const workout = tools.workouts[tools.workouts.length - 1];
             if (!workout) throw new Error("no workout ");
-            console.log(
-              "workout logs len",
-              workout.logs.length,
-              unwrap(workout)
-            );
-            tools.addRep(
-              workout.id,
-              workout.logs[workout.logs.length - 1].id,
-              +e.currentTarget[0].value,
-              +e.currentTarget[1].value
-            );
+            tools.addRep(+e.currentTarget[0].value, +e.currentTarget[1].value);
             setWhat("Controls");
           }}
         >
@@ -317,6 +302,7 @@ const ControlBar = () => {
               <input
                 type="text"
                 autofocus
+                use:afocus
                 id="default-search"
                 class="block w-full p-0 py-3 pl-10 ring-0 focus:ring-0 focus:border-b-black text-black border-t-0 border-x-0 border-b border-black bg-transparent"
                 onFocus={() => {
