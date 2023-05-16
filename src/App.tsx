@@ -131,7 +131,7 @@ const BottomSheet: Component<{ children?: JSXElement; classes?: string }> = (
     >
       <Motion.div
         class={
-          "z-50 text-black p-2 bg-gray-200 shadow-sm  rounded-t-md fixed bottom-0  left-10 right-10 " +
+          "z-50 text-black p-2 bg-gray-200 shadow-sm  rounded-t-md absolute bottom-0  left-10 right-10 " +
           props.classes
         }
         initial={{ y: 2500 }}
